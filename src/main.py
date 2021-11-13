@@ -1,4 +1,9 @@
+import sys
+
 import numpy as np
+from PyQt5.QtWidgets import QApplication
+
+from src.gui.MainWindow import GUIWindow
 
 
 def calculate_priority(matrix):
@@ -17,17 +22,27 @@ def synthesize_result(criterion_priorities, alternatives_priorities):
     return result
 
 
+# if __name__ == "__main__":
+#    n_criterion = 2
+#    experience = np.array([[1, 1/4, 4], [4, 1, 9], [1/4, 1/9, 1]])
+#    education = np.array([[1, 3, 1/5], [1/3, 1, 1/7], [5, 7, 1]])
+#    priorities = [calculate_priority(experience), calculate_priority(education)]
+#    criteria = np.array([[1, 4], [1/4, 1]])
+#    criterion_priorities = calculate_priority(criteria)
+#    print("Criterion priorities:", criterion_priorities)
+#    res = synthesize_result(criterion_priorities, priorities)
+#    for i in range(len(criterion_priorities)):
+#        print(res[i])
+#    total = res.sum(axis=0)
+#    print("Total:", total)
+#    print("The best choice is:", np.argmax(total), " alternative")  # indeksowane od 0
+
+
+def main(arg):
+    app = QApplication(arg)
+    gui = GUIWindow()
+    sys.exit(app.exec_())
+
+
 if __name__ == "__main__":
-    n_criterion = 2
-    experience = np.array([[1, 1/4, 4], [4, 1, 9], [1/4, 1/9, 1]])
-    education = np.array([[1, 3, 1/5], [1/3, 1, 1/7], [5, 7, 1]])
-    priorities = [calculate_priority(experience), calculate_priority(education)]
-    criteria = np.array([[1, 4], [1/4, 1]])
-    criterion_priorities = calculate_priority(criteria)
-    print("Criterion priorities:", criterion_priorities)
-    res = synthesize_result(criterion_priorities, priorities)
-    for i in range(len(criterion_priorities)):
-        print(res[i])
-    total = res.sum(axis=0)
-    print("Total:", total)
-    print("The best choice is:", np.argmax(total), " alternative")  # indeksowane od 0
+    main(sys.argv)
