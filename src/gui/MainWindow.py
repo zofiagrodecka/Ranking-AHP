@@ -2,6 +2,8 @@ from PyQt5.QtWidgets import QLabel, QWidget, QMainWindow, QHBoxLayout, QVBoxLayo
     QFileDialog, QLineEdit, QSlider, QGridLayout
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
+import csv
+import numpy
 
 
 class GUIWindow(QWidget):
@@ -50,23 +52,47 @@ class GUIWindow(QWidget):
         self.param_layout.addWidget(self.param_title_2, 1, 0)
         self.param_layout.addWidget(self.param_edit_2, 1, 1)
         self.param.setLayout(self.param_layout)
+        self.load = QPushButton("Załaduj plik z danymi", self)
+        self.load.setStyleSheet("background:#3f3f3f; color:#d1d1d1; text-transform:uppercase;")
+        self.load.setGeometry(170, 250, 150, 30)
+        self.load.clicked.connect(self.read_file)
         self.forward = QPushButton("Dalej", self)
         self.forward.setStyleSheet("background:#3f3f3f; color:#d1d1d1; text-transform:uppercase;")
-        self.forward.setGeometry(170, 250, 150, 30)
-        self.forward.clicked.connect(self.set_criteria_window)
+        self.forward.setGeometry(170, 270, 150, 30)
+        self.forward.clicked.connect(self.processing)
         self.layout.addWidget(self.title)
         self.layout.addWidget(self.subtitle)
         self.layout.addWidget(self.param)
+        self.layout.addWidget(self.load)
         self.layout.addWidget(self.forward)
         self.setLayout(self.layout)
         self.show()
 
-    def add_widget(self):
-        self.forward_2 = QPushButton("Dalej1", self)
-        self.forward_2.setStyleSheet("background:#3f3f3f; color:#d1d1d1; text-transform:uppercase;")
-        self.forward_2.setGeometry(200, 400, 150, 30)
-        self.forward_2.clicked.connect(self.read_file_window)
-        self.layout.addWidget(self.forward_2)
+    def read_file(self):
+        self.criteria_number = int(self.param_edit_1.text())
+        self.alternative_number = int(self.param_edit_2.text())
+        print("liczba kryterów: ", self.criteria_number)
+        print("liczba alternatyw: ", self.alternative_number)
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        file_name = QFileDialog.getOpenFileName(self, 'Open File', "")
+        if file_name:
+            print(file_name)
+        reader = csv.reader(open(file_name[0], "rt"), delimiter=";")
+        x = list(reader)
+        result = numpy.array(x)
+        c = self.criteria_number
+        a = self.alternative_number
+        criteria = result[0][0:c]
+        print(criteria)
+        alternatives = result[1][0:a]
+        print(alternatives)
+        matrixes = [[]] * c
+        beg = 2
+        for i in range(c):
+            matrixes[i] = result[beg:beg + 6]
+            beg = beg + 6
+            print(matrixes[i])
 
     def set_criteria_window(self):
         self.criteria_number = int(self.param_edit_1.text())
@@ -107,3 +133,6 @@ class GUIWindow(QWidget):
         for i in range(self.criteria_number):
             print(self.criteria_list[i].text())
             self.criteria.append(self.criteria_list[i].text())
+
+    def processing(self):
+        print("processing")
