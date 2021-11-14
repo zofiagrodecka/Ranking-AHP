@@ -83,6 +83,7 @@ class GUIWindow(QWidget):
         result = numpy.array(x)
         c = self.criteria_number
         a = self.alternative_number
+        l = len(result)
         criteria = result[0][0:c]
         print(criteria)
         alternatives = result[1][0:a]
@@ -90,9 +91,18 @@ class GUIWindow(QWidget):
         matrixes = [[]] * c
         beg = 2
         for i in range(c):
-            matrixes[i] = result[beg:beg + 6].astype("float")
-            beg = beg + 6
+            matrixes[i] = result[beg:beg + a].astype("float")
+            beg = beg + a
             print(matrixes[i])
+        c_beg = l - c
+        c_end = l
+        criteria_comparison = [[]]*c
+        for i in range(c):
+            criteria_comparison[i] = result[c_beg][0:c].astype("float")
+            c_beg+=1
+        criteria_comparison = numpy.array(criteria_comparison)
+        print(criteria_comparison)
+
 
     def set_criteria_window(self):
         self.criteria_number = int(self.param_edit_1.text())
