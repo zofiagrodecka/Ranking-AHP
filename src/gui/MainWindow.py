@@ -90,7 +90,7 @@ class GUIWindow(QWidget):
         matrixes = [[]] * c
         beg = 2
         for i in range(c):
-            matrixes[i] = result[beg:beg + 6]
+            matrixes[i] = result[beg:beg + 6].astype("float")
             beg = beg + 6
             print(matrixes[i])
 
