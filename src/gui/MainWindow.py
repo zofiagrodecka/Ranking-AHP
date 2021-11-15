@@ -4,9 +4,12 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 import csv
 import numpy
-from app.AHPCalculator import AHPCalculator
+from src.app.AHPCalculator import AHPCalculator
 from copy import deepcopy
 from matplotlib import pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.backends.backend_template import FigureCanvas
+from matplotlib.figure import Figure
 
 
 class GUIWindow(QWidget):
@@ -15,11 +18,12 @@ class GUIWindow(QWidget):
         self.criteria_number = 0
         self.alternative_number = 0
         self.criteria = []
+        self.alternatives = []
         self.AHPCalculator = None
         self.initGUI()
 
     def initGUI(self):
-        self.setGeometry(200, 200, 500, 300)
+        self.setGeometry(200, 200, 500, 230)
         self.setWindowTitle("AHP-Ranking")
         self.setWindowIcon(QIcon('pathology.png'))
         self.setStyleSheet("background-color:#b8b8b8")
@@ -84,18 +88,16 @@ class GUIWindow(QWidget):
             print(file_name)
         reader = csv.reader(open(file_name[0], "rt"), delimiter=";")
         x = list(reader)
-        print(x)
         result = numpy.array(x)
+        print(result)
         c = self.criteria_number
         a = self.alternative_number
         l = len(result)
-        criteria = result[0][0:c]
-        print("Criteria:", criteria)
-        alternatives = result[1][0:a]
-        print("Alternatives:", alternatives)
-
-        self.AHPCalculator = AHPCalculator(self.criteria_number, self.alternative_number, deepcopy(criteria), deepcopy(alternatives))
-        print(result)
+        self.criteria = result[0][0:c]
+        print("Criteria:", self.criteria)
+        self.alternatives = result[1][0:a]
+        print("Alternatives:", self.alternatives)
+        self.AHPCalculator = AHPCalculator(self.criteria_number, self.alternative_number, deepcopy(self.criteria), deepcopy(self.alternatives))
         matrixes = [[]] * c
         beg = 2
         for i in range(c):
@@ -113,48 +115,6 @@ class GUIWindow(QWidget):
         self.AHPCalculator.criteria_comparison = deepcopy(criteria_comparison)
         print("Criteria comparison:", criteria_comparison)
 
-
-    def set_criteria_window(self):
-        self.criteria_number = int(self.param_edit_1.text())
-        self.alternative_number = int(self.param_edit_2.text())
-        print("liczba kryterów: ", self.criteria_number)
-        print("liczba alternatyw: ", self.alternative_number)
-
-        print(self.criteria_number + self.alternative_number)
-        self.setGeometry(200, 200, 800, 500)
-        self.subtitle.setText("Wprowadź kryteria")
-        self.title.setGeometry(0, 10, 800, 50)
-        self.subtitle.setGeometry(0, 50, 800, 50)
-        #self.param.hide()
-        #self.forward.hide()
-        self.layout.itemAt(2).widget().deleteLater()
-        self.layout.itemAt(3).widget().deleteLater()
-        self.criteria_widget = QWidget(self)
-        self.criteria_widget.setGeometry(0, 0, 800, 300)
-        self.criteria_layout = QGridLayout(self.criteria_widget)
-        self.criteria_list = []
-        for i in range(self.criteria_number):
-            print("kryterium ", i)
-            criteria_label = QLabel(self.criteria_widget)
-            text = str(i) + "."
-            criteria_label.setText(text)
-            criteria_edit = QLineEdit(self.criteria_widget)
-            self.criteria_list.append(criteria_edit)
-            self.criteria_layout.addWidget(criteria_label, i, 0)
-            self.criteria_layout.addWidget(criteria_edit, i, 1)
-        self.criteria_widget.setLayout(self.criteria_layout)
-        self.layout.addWidget(self.criteria_widget)
-        self.forward_2 = QPushButton("Dalej", self)
-        self.forward_2.setStyleSheet("background:#3f3f3f; color:#d1d1d1; text-transform:uppercase;")
-        self.forward_2.setGeometry(170, 400, 150, 30)
-        self.forward_2.clicked.connect(self.read_file_window)
-        self.layout.addWidget(self.forward_2)
-
-    def read_file_window(self):
-        for i in range(self.criteria_number):
-            print(self.criteria_list[i].text())
-            self.criteria.append(self.criteria_list[i].text())
-
     def processing(self):
         print("processing")
         # print(self.AHPCalculator.alternative_matrixes)
@@ -165,13 +125,64 @@ class GUIWindow(QWidget):
             print(result[i])
         total = result.sum(axis=0)
         print("Total:", total)
-        print("The best choice is:", self.AHPCalculator.alternatives_names[numpy.argmax(total)])
+        best_choice = self.AHPCalculator.alternatives_names[numpy.argmax(total)]
+        print("The best choice is:", best_choice)
 
         # Plot
+        ax_x = []
+        for i in range(self.alternative_number):
+            ax_x.append(i)
+        self.figure = plt.figure()
         objects = self.AHPCalculator.alternatives_names
         y_pos = numpy.arange(self.alternative_number)
-        plt.bar(y_pos, total)
-        plt.xticks(y_pos, objects)
-        plt.ylabel('Priorytet')
-        plt.title('Ranking AHP domów w okolicy Krakowa')
-        plt.show()
+        self.plot = self.figure.add_subplot(111)
+        self.plot.bar(y_pos, total)
+        self.plot.set_xticks(ax_x)
+        self.plot.set_xticklabels(self.alternatives)
+        self.plot.set_ylabel('Priorytet')
+        self.plot.set_title('Ranking AHP domów w okolicy Krakowa')
+        #self.plot.show()
+
+        self.setGeometry(200, 200, 800, 500)
+        self.layout.itemAt(2).widget().deleteLater()
+        self.layout.itemAt(3).widget().deleteLater()
+        self.layout.itemAt(4).widget().deleteLater()
+        sub_message = "Najlepszą opcją jest " + best_choice
+        self.subtitle.setText(sub_message)
+
+        sorted_alternatives = []
+        result_copy = deepcopy(total)
+
+        for i in range(self.alternative_number):
+            index = numpy.argmax(result_copy)
+            sorted_alternatives.append(self.alternatives[index])
+            result_copy[index] = -1
+
+        print(sorted_alternatives)
+
+        self.bottom = QWidget(self)
+        self.b_layout = QHBoxLayout(self.bottom)
+        self.rank_widget = QWidget(self.bottom)
+        self.rank_layout = QVBoxLayout(self.rank_widget)
+        title_label = QLabel(self.rank_widget)
+        title_label.setText("Ranking alternatyw: ")
+        self.rank_layout.addWidget(title_label)
+        for i in range(self.alternative_number):
+            label = QLabel(self.rank_widget)
+            mes = str(i+1) + ". " + sorted_alternatives[i]
+            label.setText(mes)
+            self.rank_layout.addWidget(label)
+        self.rank_layout.setAlignment(Qt.AlignTop)
+        self.rank_widget.setLayout(self.rank_layout)
+        self.b_layout.addWidget(self.rank_widget)
+
+        self.canvas = FigureCanvasQTAgg(self.figure)
+        self.b_layout.addWidget(self.canvas)
+        self.bottom.setLayout(self.b_layout)
+        self.layout.addWidget(self.bottom)
+
+
+
+
+
+
