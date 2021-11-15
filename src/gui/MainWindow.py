@@ -4,6 +4,8 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 import csv
 import numpy
+from app.AHPCalculator import AHPCalculator
+from copy import deepcopy
 
 
 class GUIWindow(QWidget):
@@ -12,6 +14,7 @@ class GUIWindow(QWidget):
         self.criteria_number = 0
         self.alternative_number = 0
         self.criteria = []
+        self.AHPCalculator = None
         self.initGUI()
 
     def initGUI(self):
@@ -80,20 +83,25 @@ class GUIWindow(QWidget):
             print(file_name)
         reader = csv.reader(open(file_name[0], "rt"), delimiter=";")
         x = list(reader)
+        print(x)
         result = numpy.array(x)
         c = self.criteria_number
         a = self.alternative_number
         l = len(result)
         criteria = result[0][0:c]
-        print(criteria)
+        print("Criteria:", criteria)
         alternatives = result[1][0:a]
-        print(alternatives)
+        print("Alternatives:", alternatives)
+
+        self.AHPCalculator = AHPCalculator(self.criteria_number, self.alternative_number, deepcopy(criteria), deepcopy(alternatives))
+        print(result)
         matrixes = [[]] * c
         beg = 2
         for i in range(c):
             matrixes[i] = result[beg:beg + a].astype("float")
             beg = beg + a
             print(matrixes[i])
+            self.AHPCalculator.append_alternative(deepcopy(matrixes[i]))
         c_beg = l - c
         c_end = l
         criteria_comparison = [[]]*c
@@ -101,7 +109,8 @@ class GUIWindow(QWidget):
             criteria_comparison[i] = result[c_beg][0:c].astype("float")
             c_beg+=1
         criteria_comparison = numpy.array(criteria_comparison)
-        print(criteria_comparison)
+        self.AHPCalculator.criteria_comparison = deepcopy(criteria_comparison)
+        print("Criteria comparison:", criteria_comparison)
 
 
     def set_criteria_window(self):
@@ -109,6 +118,7 @@ class GUIWindow(QWidget):
         self.alternative_number = int(self.param_edit_2.text())
         print("liczba kryterów: ", self.criteria_number)
         print("liczba alternatyw: ", self.alternative_number)
+
         print(self.criteria_number + self.alternative_number)
         self.setGeometry(200, 200, 800, 500)
         self.subtitle.setText("Wprowadź kryteria")
@@ -146,3 +156,12 @@ class GUIWindow(QWidget):
 
     def processing(self):
         print("processing")
+        # print(self.AHPCalculator.alternative_matrixes)
+        self.AHPCalculator.calculate_alternatives_priorities()
+        self.AHPCalculator.calculate_criteria_priorities()
+        result = self.AHPCalculator.synthesize_result()
+        for i in range(self.criteria_number):
+            print(result[i])
+        total = result.sum(axis=0)
+        print("Total:", total)
+        print("The best choice is:", numpy.argmax(total), " alternative")  # indeksowane od 0
