@@ -6,6 +6,7 @@ import csv
 import numpy
 from app.AHPCalculator import AHPCalculator
 from copy import deepcopy
+from matplotlib import pyplot as plt
 
 
 class GUIWindow(QWidget):
@@ -164,4 +165,13 @@ class GUIWindow(QWidget):
             print(result[i])
         total = result.sum(axis=0)
         print("Total:", total)
-        print("The best choice is:", numpy.argmax(total), " alternative")  # indeksowane od 0
+        print("The best choice is:", self.AHPCalculator.alternatives_names[numpy.argmax(total)])
+
+        # Plot
+        objects = self.AHPCalculator.alternatives_names
+        y_pos = numpy.arange(self.alternative_number)
+        plt.bar(y_pos, total)
+        plt.xticks(y_pos, objects)
+        plt.ylabel('Priorytet')
+        plt.title('Ranking AHP domów w okolicy Krakowa')
+        plt.show()
