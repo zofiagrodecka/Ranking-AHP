@@ -101,7 +101,10 @@ class GUIWindow(QWidget):
         matrixes = [[]] * c
         beg = 2
         for i in range(c):
-            matrixes[i] = result[beg:beg + a].astype("float")
+            #matrixes[i] = result[beg:beg + a].astype("float")
+            matrixes[i] = []
+            for j in range(a):
+                matrixes[i].append(result[beg+j][0:a].astype("float"))
             beg = beg + a
             print(matrixes[i])
             self.AHPCalculator.append_alternative(deepcopy(matrixes[i]))
